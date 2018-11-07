@@ -22,7 +22,7 @@ The goals / steps of this project are the following:
 [image3]: ./output_images/binary_straight_lines1.jpg "Binary Example"
 [image4]: ./output_images/perspective_transform_straight_lines1.jpg "Warp Example"
 [image5]: ./output_images/poly_straight_lines1.png "Fit Visual"
-[image6]: ./output_images/test1.jpg "Output"
+[image6]: ./output_images/straight_lines1.jpg "Output"
 [video1]: ./output_video/project_video.mp4 "Video"
 [video2]: ./output_video/challenge_video.mp4 "Challenge Video"
 

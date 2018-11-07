@@ -275,4 +275,5 @@ def convertVideo():
     out.release()
     cap.release()
 
-convertVideo()
+
+convertImages()
