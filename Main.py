@@ -134,13 +134,13 @@ def find_lane_pixels(binary_warped):
 
 
 def measure_curvature_pixels(left_fit, right_fit, y_eval):
+
     left_curverad = ((1 + (2 * left_fit[0] * y_eval + left_fit[1]) ** 2) ** (3 / 2)) / (
         2 * left_fit[0])  ## Implement the calculation of the left line here
     right_curverad = ((1 + (2 * right_fit[0] * y_eval + right_fit[1]) ** 2) ** (3 / 2)) / (
         2 * right_fit[0])  ## Implement the calculation of the right line here
 
     return left_curverad, right_curverad
-
 
 def fit_polynomial(binary_img, leftx, lefty, rightx, righty):
     left_fit = np.polyfit(lefty, leftx, 2)
@@ -158,7 +158,6 @@ def fit_polynomial(binary_img, leftx, lefty, rightx, righty):
         right_fitx = 1 * ploty ** 2 + 1 * ploty
 
     return binary_img, left_fit, right_fit, left_fitx, right_fitx, ploty
-
 
 def search_around_poly(binary_warped, left_fit, right_fit):
     # HYPERPARAMETER
@@ -187,12 +186,10 @@ def search_around_poly(binary_warped, left_fit, right_fit):
 
     return leftx, lefty, rightx, righty
 
-
 def sanityCheck(left_line, right_line):
     dist = np.mean(right_line.allx) - np.mean(left_line.allx)
     sanity = dist > 300
     return sanity
-
 
 def createBlankImageWithLanes(shape, left_fitx, right_fitx, ploty, M):
     # Create an image to draw the lines on
@@ -251,7 +248,6 @@ def convertImage(img, mtx, dist, left_line=None, right_line=None):
     result = cv2.addWeighted(undist, 1, lanes_img, 0.3, 0)
     return result, left_line, right_line
 
-
 def convertImages():
     mtx, dist = calibrate_camera()
     image_files = glob.glob("test_images/*.jpg")
@@ -259,30 +255,24 @@ def convertImages():
         img = cv2.imread(file)
         result, left_fit, right_fit = convertImage(img, mtx, dist)
         _, name = cv2.os.path.split(file)
-        cv2.imwrite("output_images1/%s" % name, result)
-
+        cv2.imwrite("output_images/%s" % name, result)
 
 def convertVideo():
     mtx, dist = calibrate_camera()
     fourcc = cv2.VideoWriter_fourcc(*'X264')
-    out = cv2.VideoWriter('output_images/project_video.mp4', fourcc, 20.0, (1280, 720))
+    out = cv2.VideoWriter('output_video/project_video.mp4', fourcc, 20.0, (1280, 720))
     cap = cv2.VideoCapture('project_video.mp4')
-    c = 0
-    error_counter = 0
     left_line = None
     right_line = None
     while cap.isOpened():
         ret, img = cap.read()
         if ret == 0:
             break
-        c += 1
         result, left_line, right_line = convertImage(img, mtx, dist, left_line, right_line)
         if result is None:
-            error_counter += 1
             continue
         out.write(result)
     out.release()
     cap.release()
-
 
 convertVideo()
