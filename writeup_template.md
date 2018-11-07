@@ -21,9 +21,10 @@ The goals / steps of this project are the following:
 [image2]: ./output_images/undistort_straight_lines1.jpg "Road Transformed"
 [image3]: ./output_images/binary_straight_lines1.jpg "Binary Example"
 [image4]: ./output_images/perspective_transform_straight_lines1.jpg "Warp Example"
-[image5]: ./output_images/poly_straight_lines1.jpg "Fit Visual"
+[image5]: ./output_images/poly_straight_lines1.png "Fit Visual"
 [image6]: ./output_images/test1.jpg "Output"
 [video1]: ./output_video/project_video.mp4 "Video"
+[video2]: ./output_video/challenge_video.mp4 "Challenge Video"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
 
@@ -96,7 +97,8 @@ I implemented this step in lines 194 through 207 in my code in `Main.py` in the 
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a ![link to my video result][video1]
+Here's a ![link to my challenge video result][video2]
 
 ---
 
