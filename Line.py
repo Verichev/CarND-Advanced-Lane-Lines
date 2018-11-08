@@ -15,3 +15,5 @@ class Line():
         self.allx = None
         # y values for detected line pixels
         self.ally = None
+        # shift form the center of the road
+        self.shift = None

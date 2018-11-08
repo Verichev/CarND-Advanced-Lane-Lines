@@ -7,6 +7,9 @@ from Line import Line
 
 src_points = np.float32([[576, 464], [710, 464], [1045, 677], [267, 677]])
 dst_points = np.float32([[200, 0], [1000, 0], [1000, 700], [200, 700]])
+ym_per_pix = 30 / 720  # meters per pixel in y dimension
+xm_per_pix = 3.7 / 800  # meters per pixel in x dimension
+y_measure = 500
 
 
 def calibrate_camera():
@@ -145,7 +148,8 @@ def measure_curvature_pixels(left_fit, right_fit, y_eval):
 def fit_polynomial(binary_img, leftx, lefty, rightx, righty):
     left_fit = np.polyfit(lefty, leftx, 2)
     right_fit = np.polyfit(righty, rightx, 2)
-
+    left_fit_real = np.polyfit(lefty * ym_per_pix, leftx * xm_per_pix, 2)
+    right_fit_real = np.polyfit(righty * ym_per_pix, rightx * xm_per_pix, 2)
     # Generate x and y values for plotting
     ploty = np.linspace(0, binary_img.shape[0] - 1, binary_img.shape[0])
     try:
@@ -156,8 +160,11 @@ def fit_polynomial(binary_img, leftx, lefty, rightx, righty):
         print('The function failed to fit a line!')
         left_fitx = 1 * ploty ** 2 + 1 * ploty
         right_fitx = 1 * ploty ** 2 + 1 * ploty
-
-    return binary_img, left_fit, right_fit, left_fitx, right_fitx, ploty
+    left_curvature_real, right_curvature_real = measure_curvature_pixels(left_fit_real, right_fit_real,
+                                                                         y_measure * ym_per_pix)
+    left_line, right_line = populateLines(left_fit, right_fit, left_fitx, right_fitx, ploty, left_curvature_real,
+                                          right_curvature_real)
+    return binary_img, left_line, right_line
 
 def search_around_poly(binary_warped, left_fit, right_fit):
     # HYPERPARAMETER
@@ -207,17 +214,7 @@ def createBlankImageWithLanes(shape, left_fitx, right_fitx, ploty, M):
     return newwarp
 
 
-def convertImage(img, mtx, dist, left_line=None, right_line=None):
-    undist = cv2.undistort(img, mtx, dist, None, mtx)
-    img = threshold_image(undist)
-    binary_img, M = perspective_transform(img)
-    leftx, lefty, rightx, righty = find_lane_pixels(
-        binary_img) if left_line is None or right_line is None else search_around_poly(binary_img,
-                                                                                       left_line.current_fit,
-                                                                                       right_line.current_fit)
-    if len(rightx) == 0 or len(leftx) == 0 or len(righty) == 0 or len(lefty) == 0:
-        return None, None, None
-    img, left_fit, right_fit, left_fitx, right_fitx, ploty = fit_polynomial(binary_img, leftx, lefty, rightx, righty)
+def populateLines(left_fit, right_fit, left_fitx, right_fitx, ploty, left_curvature, right_curvature):
     left_line = Line()
     left_line.current_fit = left_fit
     left_line.recent_xfitted.append(left_fitx)
@@ -238,13 +235,29 @@ def convertImage(img, mtx, dist, left_line=None, right_line=None):
         right_line.last_fits.remove(0)
     right_line.allx = right_fitx
     right_line.ally = ploty
+    left_line.radius_of_curvature = left_curvature
+    right_line.radius_of_curvature = right_curvature
+    left_line.shift = left_fitx[500]
+    right_line.shift = right_fitx[500]
+    return left_line, right_line
 
-    left_line.radius_of_curvature, right_line.radius_of_curvature = measure_curvature_pixels(left_fit, right_fit, 500)
+
+def convertImage(img, mtx, dist, left_line=None, right_line=None):
+    undist = cv2.undistort(img, mtx, dist, None, mtx)
+    img = threshold_image(undist)
+    binary_img, M = perspective_transform(img)
+    leftx, lefty, rightx, righty = find_lane_pixels(
+        binary_img) if left_line is None or right_line is None else search_around_poly(binary_img,
+                                                                                       left_line.current_fit,
+                                                                                       right_line.current_fit)
+    if len(rightx) == 0 or len(leftx) == 0 or len(righty) == 0 or len(lefty) == 0:
+        return None, None, None
+    img, left_line, right_line = fit_polynomial(binary_img, leftx, lefty, rightx, righty)
 
     if not sanityCheck(left_line, right_line):
         return None, None, None
     lanes_img = createBlankImageWithLanes(binary_img.shape, np.average(left_line.recent_xfitted, 0),
-                                          np.average(right_line.recent_xfitted, 0), ploty, np.linalg.inv(M))
+                                          np.average(right_line.recent_xfitted, 0), left_line.ally, np.linalg.inv(M))
     result = cv2.addWeighted(undist, 1, lanes_img, 0.3, 0)
     return result, left_line, right_line
 
@@ -260,7 +273,7 @@ def convertImages():
 def convertVideo():
     mtx, dist = calibrate_camera()
     fourcc = cv2.VideoWriter_fourcc(*'X264')
-    out = cv2.VideoWriter('output_video/project_video.mp4', fourcc, 20.0, (1280, 720))
+    out = cv2.VideoWriter('out/project_video.mp4', fourcc, 20.0, (1280, 720))
     cap = cv2.VideoCapture('project_video.mp4')
     left_line = None
     right_line = None
@@ -271,9 +284,15 @@ def convertVideo():
         result, left_line, right_line = convertImage(img, mtx, dist, left_line, right_line)
         if result is None:
             continue
+        radius = (left_line.radius_of_curvature + right_line.radius_of_curvature) / 2
+        shift = ((left_line.shift + right_line.shift) / 2 - 1280 / 2) * xm_per_pix
+        cv2.putText(result, "Radius of curvature = %dm" % radius, (230, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 255, 255),
+                    2, cv2.LINE_AA)
+        cv2.putText(result, "Vehicle is %.2fm %s of center" % (np.abs(shift), "left" if shift < 0 else "right"),
+                    (230, 100), cv2.FONT_HERSHEY_PLAIN, 3, (255, 255, 255), 2, cv2.LINE_AA)
         out.write(result)
     out.release()
     cap.release()
 
 
-convertImages()
+convertVideo()
