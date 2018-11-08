@@ -49,13 +49,13 @@ To demonstrate this step, I will describe how I apply the distortion correction 
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I used a combination of color thresholds to generate a binary image (thresholding steps at lines 26 through 50 in `Main.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+I used a combination of color thresholds to generate a binary image (thresholding steps at lines 29 through 53 in `Main.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
 
 ![alt text][image3]
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-The code for my perspective transform includes a function called `perspective_transform()`, which appears in lines 53 through 58 in the file `Main.py`.  The `perspective_transform()` function takes as inputs an image (`img`), and uses source (`src_points`) and destination (`dst_points`) points.  I chose the hardcode the source and destination points in the following manner:
+The code for my perspective transform includes a function called `perspective_transform()`, which appears in lines 56 through 61 in the file `Main.py`.  The `perspective_transform()` function takes as inputs an image (`img`), and uses source (`src_points`) and destination (`dst_points`) points.  I chose the hardcode the source and destination points in the following manner:
 
 ```python
 src_points = np.float32([[576, 464], [710, 464], [1045, 677], [267, 677]])
@@ -83,11 +83,11 @@ Then I did some other stuff and fit my lane lines with a 2nd order polynomial ki
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines 136 through 143 in my code in `Main.py`
+I did this in lines 139 through 146 and 240, 241 in my code in `Main.py`
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines 194 through 207 in my code in `Main.py` in the function `createBlankImageWithLanes(shape, left_fitx, right_fitx, ploty, M)`.  Here is an example of my result on a test image:
+I implemented this step in lines 201 through 214 in my code in `Main.py` in the function `createBlankImageWithLanes(shape, left_fitx, right_fitx, ploty, M)`.  Here is an example of my result on a test image:
 
 ![alt text][image6]
 
